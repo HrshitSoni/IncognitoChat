@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     HubConnection connection;
     public List<string> messageList = new List<string>();
+    int cnt = 0;
     public MainWindow()
     {
         InitializeComponent();
@@ -101,18 +102,30 @@ public partial class MainWindow : Window
             Messages.Items.Add(ex);
         }
     }
-   //.......................................... Time Delay code ..........................//
 
     private void Timer_Tick(object sender, EventArgs e)
     {
         if (Messages.Items.Count > 1)
         {
-            Messages.Items.RemoveAt(1);
-            Messages.Items.Refresh();
+            string? messageItem = Messages.Items[1].ToString();
+            int? length = messageItem.Length;
+            if(length < 50 && cnt<0)
+            {
+                Messages.Items.RemoveAt(1);
+                Messages.Items.Refresh();
+            }
+            else
+            {
+                cnt++;
+                if(cnt > 2)
+                {
+                    Messages.Items.RemoveAt(1);
+                    Messages.Items.Refresh();
+                    cnt = 0;
+                }
+            }
         }
     }
-
-
 
     // ......................................... XAML UI code.............................//
     private void UserInput_TextChanged(object sender, TextChangedEventArgs e)
