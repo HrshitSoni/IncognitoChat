@@ -14,9 +14,12 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button x:Name="OpenConnection" HorizontalAlignment="Center" Height="40" Width="150" Margin="20" Content="OpenConnnection" Click="OpenConnectionBtn_Click" IsEnabled="True"/>
+        <Button x:Name="OpenConnection" HorizontalAlignment="Center" Height="40" Width="150" Margin="20" Content="Connect" Click="OpenConnectionBtn_Click" IsEnabled="True"/>
+        
         <StackPanel Grid.Row="1" HorizontalAlignment="Center" Orientation="Horizontal" >
-            <TextBox x:Name="MessageInput" HorizontalAlignment="Center" Height="35" Width="300"  Margin="20" />
+            <Label Content="User:" HorizontalAlignment="Left" Margin="0,20,5,20"/>
+            <TextBox x:Name="UserInput" HorizontalAlignment="Left" Height="35" Width="120" Margin="0,20,10,20" Text="User Name?" Foreground="Gray" VerticalContentAlignment="Center" TextChanged="UserInput_TextChanged" PreviewMouseDown="UserInput_PreviewMouseDown" />
+            <TextBox x:Name="MessageInput" HorizontalAlignment="Center" Height="35" Width="300"  Margin="20" Text="Enter your message here..." Foreground="gray" VerticalContentAlignment="Center" TextChanged="MessageInput_TextChanged" PreviewMouseDown="MessageInput_PreviewMouseDown"/>
             <Button x:Name="SendBtn" Height="34" Width="125" Content="Send" IsEnabled="False" Click="SendBtn_Click" />
         </StackPanel>
                

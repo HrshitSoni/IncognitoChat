@@ -2,6 +2,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace Wpf_Client;
 
@@ -11,12 +15,10 @@ namespace Wpf_Client;
 public partial class MainWindow : Window
 {
     HubConnection connection;
-    private Dictionary<string, string> messageTimespan;
+    public List<string> messageList = new List<string>();
     public MainWindow()
     {
         InitializeComponent();
-
-        messageTimespan = new Dictionary<string, string>();
 
         connection = new HubConnectionBuilder().WithUrl("https://localhost:7156/chathub").WithAutomaticReconnect().Build();
 
@@ -52,6 +54,12 @@ public partial class MainWindow : Window
             });
             return Task.CompletedTask;
         };
+
+        var timer = new DispatcherTimer();
+        timer.Interval = TimeSpan.FromSeconds(30); 
+        timer.Tick += Timer_Tick;
+
+        timer.Start();
     }
 
     private async void OpenConnectionBtn_Click(object sender, RoutedEventArgs e)
@@ -63,7 +71,7 @@ public partial class MainWindow : Window
             {
                 var newMessage = $"{user} : {message}  {time}";
                 Messages.Items.Add(newMessage);
-                messageTimespan.Add(newMessage, timeString);
+                messageList.Add(newMessage);
             });
         });
 
@@ -73,8 +81,6 @@ public partial class MainWindow : Window
             Messages.Items.Add("Connection started");
             OpenConnection.IsEnabled = false;
             SendBtn.IsEnabled = true;
-
-          await StartMessageExpirationTimer();
         }
         catch (Exception ex)
         {
@@ -87,48 +93,77 @@ public partial class MainWindow : Window
         try
         {
             var timeString = DateTime.Now.ToString("HH:mm:ss");
-            await connection.InvokeAsync("SendMessage", "WPF Client", MessageInput.Text, timeString);
+            await connection.InvokeAsync("SendMessage", UserInput.Text, MessageInput.Text, timeString);
+            MessageInput.Text = "";
         }
         catch (Exception ex)
         {
             Messages.Items.Add(ex);
         }
     }
+   //.......................................... Time Delay code ..........................//
 
-    private async Task StartMessageExpirationTimer()
+    private void Timer_Tick(object sender, EventArgs e)
     {
-        await Task.Run(async () =>
+        if (Messages.Items.Count > 1)
         {
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(30)); 
-                ExpireMessages();
-            }
-        });
+            Messages.Items.RemoveAt(1);
+            Messages.Items.Refresh();
+        }
     }
 
-    private void ExpireMessages()
+
+
+    // ......................................... XAML UI code.............................//
+    private void UserInput_TextChanged(object sender, TextChangedEventArgs e)
     {
-        var expiredMessages = new List<string>();
-        
-        var currTime = DateTime.Now;
-        foreach (var message in messageTimespan)
+        TextBox textBox = (TextBox)sender;
+        if (textBox.Text == "User Name?")
         {
-            var time = DateTime.ParseExact(message.Value, "HH,mm,ss", null);
-            if(currTime - time > TimeSpan.FromSeconds(300))
-            {
-                expiredMessages.Add(message.Key);
-            }
+            textBox.Foreground = Brushes.Gray;
         }
-
-        foreach(var expiredMessage in expiredMessages)
+        else
         {
-            var index = Messages.Items.IndexOf(expiredMessage);
-            if (index != -1)
-            {
-                Dispatcher.Invoke(() => Messages.Items.RemoveAt(index));
-            }
+            textBox.Foreground = Brushes.Black;
         }
-
     }
+
+    private void UserInput_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        TextBox textBox = (TextBox)sender;
+        if(textBox.Text == "User Name?")
+        {
+            textBox.Text = "";
+        }
+    }
+
+    private void MessageInput_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        TextBox textBox = (TextBox)sender;
+        if (textBox.Text == "Enter your message here...")
+        {
+            textBox.Foreground = Brushes.Gray;
+        }
+        else
+        {
+            textBox.Foreground = Brushes.Black;
+        }
+    }
+
+    private void MessageInput_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+
+        TextBox textBox = (TextBox)sender;
+        if (textBox.Text == "Enter your message here...")
+        {
+            textBox.Text = "";
+        }
+    }
+}
+
+public class MessageItem
+{
+    public string user { get; set; }
+    public string messageString { get; set; }
+    public TimeSpan time { get; set; }
 }
